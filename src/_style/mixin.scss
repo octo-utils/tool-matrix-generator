@@ -1,0 +1,27 @@
+@import "./variable";
+
+@mixin blocky($background: $gray) {
+  color: $white;
+  border: 0.2rem solid $white;
+  border-radius:  0.2rem;
+  background-color: $background;
+}
+
+@mixin button() {
+  @include blocky($color-btn);
+  user-select: none;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  display: inline-block;
+
+  &.disabled {
+    background-color: $gray;
+    cursor: not-allowed;
+  }
+
+  &:not(.disabled):hover {
+    background-color: $green-light;
+  }
+}

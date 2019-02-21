@@ -1,0 +1,33 @@
+.component {
+  display: block;
+  width: 100%;
+  position: relative;
+  .content {
+    display: flex;
+    align-items: center;
+    .slider-bar {
+      position: relative;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+
+      .slider-bar-slot {
+        transition-duration: inherit;
+      }
+
+      .slider-handler {
+        position: absolute;
+        bottom: 0;
+        width: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        transition: transform ease 0ms;
+        &:not(.dragging) {
+          transition: transform ease;
+        }
+      }
+    }
+  }
+}
