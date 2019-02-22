@@ -7,6 +7,11 @@ import pascalCase from "pascal-case"
 import { mat3 } from "gl-matrix"
 import IconPlay from "../assets/play-solid.svg"
 import IconStop from "../assets/stop-solid.svg"
+import IconCopy from "../assets/copy-regular.svg"
+import Katex from "../components/katex"
+import copy from 'copy-to-clipboard';
+import AntdToolTip from "ant-design-vue/lib/tooltip"
+// import Decimal from "decimal.js"
 
 const IDENTITY_MATRIX_3x3 = [
   1, 0, 0,
@@ -29,9 +34,19 @@ export default Vue.extend({
       boxCurrentDuration: 0,
       boxCurrentTransform: null,
       boxResultTransform: null,
+      isJustCopyAsPlainText: false,
+      isJustCopyAsCssText: false,
+      // isTransposed: false,
+      // boxTransformMatrixToShow: null,
     }
   },
   computed: {
+    // boxTransformMatrixToShow() {
+    //   return this.boxTransformMatrix;
+    // },
+    boxTransformMatrixSimplify() {
+      return this.boxTransformMatrix.map(n => Number(n.toFixed(3)));
+    },
     boxTransformMatrixForCss() {
       const m = mat3.fromValues(...IDENTITY_MATRIX_3x3);
       mat3.translate(m, m, [this.boxTranslateX, this.boxTranslateY]);
@@ -60,6 +75,15 @@ export default Vue.extend({
     }
   },
   methods: {
+    onTranspose() {},
+    onCopyAsPlainText() {
+      copy(this.boxTransformMatrixSimplify.join(','))
+      this.isJustCopyAsPlainText = true;
+    },
+    onCopyAsCssText() {
+      copy(`matrix(${this.boxTransformMatrixForCss.join(",")})`);
+      this.isJustCopyAsCssText = true;
+    },
     navigateBack() {
       this.$router.back();
     },
@@ -101,7 +125,9 @@ export default Vue.extend({
 
     const viewportScaleReciprocal = 1 / canvasViewportScale;
 
-    const resultText = this.boxTransformMatrix.join(",");
+    // const textBoxTransformMatrix = this.boxTransformMatrix.map(n => {
+    //   return Number(n.toFixed(3));
+    // }).join(",");
 
     return <div class={style('page')}>
       <div class={style('content')}>
@@ -204,10 +230,52 @@ export default Vue.extend({
         </div>
         <div class={style('footer')}>
           <div class={style('footer-content')}>
-            <span>{resultText}</span>
+            <span>
+              <Katex expression={generateKatexMatrixExpression(this.boxTransformMatrixSimplify)}/>
+            </span>
+          </div>
+          <div class={style('footer-btn-group')}>
+            <AntdToolTip trigger={'click'} align={{ offset: [0, 5] }}
+                         onMouseleave={_ => this.isJustCopyAsPlainText = false}
+                         visible={this.isJustCopyAsPlainText} placement="top">
+              <template slot="title">
+                <span>Copied~</span>
+              </template>
+              <div onClick={this.onCopyAsPlainText}
+                   class={style('btn-f', 'btn-copy-as-plain-text')}>
+                <i class={'icon'}><IconCopy/></i><span>plain Text</span>
+              </div>
+            </AntdToolTip>
+            <AntdToolTip trigger={'click'} align={{ offset: [0, 5] }}
+                         onMouseleave={_ => this.isJustCopyAsCssText = false}
+                         visible={this.isJustCopyAsCssText} placement="top">
+              <template slot="title">
+                <span>Copied~</span>
+              </template>
+              <div title={'copy as css transform prop value \"matrix(...)\"'}
+                   onClick={this.onCopyAsCssText}
+                   class={style('btn-f', 'btn-copy-as-css-transform-matrix')}>
+                <i class={'icon'}><IconCopy/></i><span>CSS matrix()</span>
+              </div>
+            </AntdToolTip>
           </div>
         </div>
       </div>
     </div>
   }
 })
+
+function generateKatexMatrixExpression(m) {
+  const [
+    a, c, e,
+    b, d, f,
+    i1, i2, i3
+  ] = m;
+  return `
+\\begin{pmatrix}
+   ${a} & ${c} & ${e} \\\\
+   ${b} & ${d} & ${f} \\\\
+   ${i1} & ${i2} & ${i3}
+\\end{pmatrix}	
+  `.trim();
+}

@@ -21,6 +21,9 @@ const sassOnceImporter = require('node-sass-once-importer');
 const transformSvgToVue = require('./tools/browserify-transform-svg-to-vue');
 const through = require("through2");
 const postcssPluginUrl = require("postcss-url")
+const less = require('less');
+// const uglify = require('gulp-uglify');
+const terser = require('gulp-terser');
 
 const babelrc = require("./babelrc");
 
@@ -37,8 +40,19 @@ const aliasrc = {
 const b = patchingBrowserify(browserify({
   entries:"./src/index.js",
   standalone:"app",
-  debug: true
+  // debug: true
 }))
+
+function _lessReader(buf, filename) {
+  return new Promise((resolve, reject) => {
+    const str = buf.toString();
+    less.render(str, { filename, javascriptEnabled: true }).then(function(res) {
+      resolve(res.css);
+    }).catch(function(err) {
+      reject(err);
+    });
+  });
+}
 
 function _scssReader(_, filename, emitFile) {
   return new Promise((resolve, reject) => {
@@ -51,7 +65,9 @@ function _scssReader(_, filename, emitFile) {
         }),
         sassOnceImporter(),
         function (url, prev, done) {
-          emitFile(url);
+          const hasExt = path.extname(url);
+          const absolutePath = path.join(path.dirname(prev), url) + (hasExt ? '' : '.scss');
+          emitFile(absolutePath);
           done();
         }
       ]
@@ -63,13 +79,15 @@ function _scssReader(_, filename, emitFile) {
 }
 
 function patchingBrowserify(b) {
-  return b.plugin(alias, { ...aliasrc })
+  return b.plugin(alias, { ...aliasrc, global: true })
     .transform(transformSvgToVue)
     .transform(transformCssInlineWithClassNames, {
+      global: true,
       postcssPlugins: [
         postcssPluginUrl({ url: 'inline' })
       ],
       reader: {
+        "*.less": _lessReader,
         "*.scss": _scssReader
       },
       jsModuleTemplate(css, classNamesMapping, filepath) {
@@ -109,9 +127,11 @@ function bundle(b) {
       })
       .pipe(source('app.js'))
       .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
+      // .pipe(sourcemaps.init({ loadMaps: true }))
       // Add transformation tasks to the pipeline here.
-      .pipe(sourcemaps.write())
+      // .pipe(sourcemaps.write())
+      // .pipe(uglify())
+      .pipe(terser())
       .pipe(gulp.dest('./dist/'))
   )
 }

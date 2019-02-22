@@ -14,14 +14,20 @@
   text-decoration: none;
   cursor: pointer;
   padding: 5px 10px;
-  display: inline-block;
+  //display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-  &.disabled {
-    background-color: $gray;
-    cursor: not-allowed;
-  }
+  &:global {
+    &.disabled {
+      background-color: $gray;
+      cursor: not-allowed;
+    }
 
-  &:not(.disabled):hover {
-    background-color: $green-light;
+    &:not(.disabled):hover {
+      color: inherit;
+      background-color: $green-light;
+    }
   }
 }

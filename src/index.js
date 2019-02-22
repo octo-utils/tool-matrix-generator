@@ -6,6 +6,8 @@ import createStore from "./store"
 import VueRouter from "vue-router"
 import Index from "./routes/index"
 import Space2d from "./routes/space2d"
+// import "katex/dist/katex.css"
+import "ant-design-vue/lib/tooltip/style"
 
 export function entry() {
 

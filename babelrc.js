@@ -17,7 +17,10 @@ module.exports = {
           "es6.set"
         ]
       }
-    ]
+    ],
+    // ["minify",{
+    //   builtIns: false,
+    // }],
   ],
   "plugins": [
     "transform-vue-jsx",
