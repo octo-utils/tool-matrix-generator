@@ -229,7 +229,7 @@ export default Vue.extend({
               </div>
             </div>
             <div class={style('form-item')}>
-              <div className={style("title", "name")}>
+              <div class={style("title", "name")}>
                 <span>Scale</span>
               </div>
               <div class={style("form-item-couple")}>
