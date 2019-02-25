@@ -5,6 +5,7 @@ import style from "./space2d.scss"
 import Slider from "../components/slider"
 import pascalCase from "pascal-case"
 import { mat3 } from "gl-matrix"
+import { skewMat3 } from "../util/matrix-skew";
 import IconPlay from "../assets/play-solid.svg"
 import IconStop from "../assets/stop-solid.svg"
 import IconCopy from "../assets/copy-regular.svg"
@@ -28,8 +29,10 @@ export default Vue.extend({
       boxTranslateX: 0,
       boxTranslateY: 0,
       boxRotate: 0,
-      boxSkew: 0,
-      boxScale: 1,
+      boxSkewX: 0,
+      boxSkewY: 0,
+      boxScaleX: 1,
+      boxScaleY: 1,
       boxTransformMatrix: null,
       boxCurrentDuration: 0,
       boxCurrentTransform: null,
@@ -52,17 +55,13 @@ export default Vue.extend({
       mat3.translate(m, m, [this.boxTranslateX, this.boxTranslateY]);
 
       mat3.rotate(m, m, this.boxRotate * Math.PI / 180);
-      mat3.scale(m, m, [this.boxScale, this.boxScale]);
+      mat3.scale(m, m, [this.boxScaleX, this.boxScaleY]);
+      skewMat3(m, m, [this.boxSkewX, this.boxSkewY])
       mat3.transpose(m, m);
 
       this.boxTransformMatrix = Array.from(m);
 
       const [a, c, e, b, d, f] = m;
-      // const [
-      //   a, b, i,
-      //   c, d, ii,
-      //   e, f, iii
-      // ] = m
 
       return [a, b, c, d, e, f];
     }
@@ -75,13 +74,22 @@ export default Vue.extend({
     }
   },
   methods: {
+    resetParameters() {
+      this.boxTranslateX = 0;
+      this.boxTranslateY = 0;
+      this.boxRotate = 0;
+      this.boxSkewX = 0;
+      this.boxSkewY = 0;
+      this.boxScaleX = 1;
+      this.boxScaleY = 1;
+    },
     onTranspose() {},
     onCopyAsPlainText() {
       copy(this.boxTransformMatrixSimplify.join(','))
       this.isJustCopyAsPlainText = true;
     },
     onCopyAsCssText() {
-      copy(`matrix(${this.boxTransformMatrixForCss.join(",")})`);
+      copy(`matrix(${this.boxTransformMatrixForCss.map(n => Number(n.toFixed(3))).join(",")})`);
       this.isJustCopyAsCssText = true;
     },
     navigateBack() {
@@ -132,7 +140,8 @@ export default Vue.extend({
     return <div class={style('page')}>
       <div class={style('content')}>
         <div class={style('head')}>
-          <div onClick={this.navigateBack} class={style('btn-back')}>Back</div>
+          <div onClick={this.navigateBack} class={style('btn-in-head')}>Back</div>
+          <div onClick={this.resetParameters} class={style('btn-in-head', 'reset')}>Reset</div>
         </div>
         <div class={style('canvas-wrap')}>
           <div class={style('canvas-content')}>
@@ -175,7 +184,7 @@ export default Vue.extend({
               <div class={style("title")}>
                 <span>Transition</span>
               </div>
-              <div class={style("form-item-transition")}>
+              <div class={style("form-item-couple")}>
                 <label>
                   <span class={style("name")}>X</span>
                   <input onInput={this.shouldUpdateBox('translateX')}
@@ -201,24 +210,42 @@ export default Vue.extend({
               </label>
             </div>
             <div class={style('form-item')}>
-              <label>
-                <div class={style("title", "name")}>
-                  <span>Skew</span>
-                </div>
-                <input onInput={this.shouldUpdateBox('skew')}
-                       value={this.boxSkew}
-                       class={style('input')} type={'text'}/>
-              </label>
+              <div class={style("title", "name")}>
+                <span>Skew</span>
+              </div>
+              <div class={style("form-item-couple")}>
+                <label>
+                  <span class={style("name")}>X</span>
+                  <input onInput={this.shouldUpdateBox('skewX')}
+                         value={this.boxSkewX}
+                         class={style('input')} type={'text'}/>
+                </label>
+                <label>
+                  <span class={style("name")}>Y</span>
+                  <input onInput={this.shouldUpdateBox('skewY')}
+                         value={this.boxSkewY}
+                         class={style('input')} type={'text'}/>
+                </label>
+              </div>
             </div>
             <div class={style('form-item')}>
-              <label>
-                <div class={style("title", "name")}>
-                  <span>Scale</span>
-                </div>
-                <input onInput={this.shouldUpdateBox('scale')}
-                       value={this.boxScale}
-                       class={style('input')} type={'text'}/>
-              </label>
+              <div className={style("title", "name")}>
+                <span>Scale</span>
+              </div>
+              <div class={style("form-item-couple")}>
+                <label>
+                  <span class={style("name")}>X</span>
+                  <input onInput={this.shouldUpdateBox('scaleX')}
+                         value={this.boxScaleX}
+                         class={style('input')} type={'text'}/>
+                </label>
+                <label>
+                  <span class={style("name")}>Y</span>
+                  <input onInput={this.shouldUpdateBox('scaleY')}
+                         value={this.boxScaleY}
+                         class={style('input')} type={'text'}/>
+                </label>
+              </div>
             </div>
           </div>
           <div>
